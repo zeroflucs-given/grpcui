@@ -43,6 +43,11 @@ import (
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 
+	// Register gzip compressor so compressed responses will work
+	_ "google.golang.org/grpc/encoding/gzip"
+	// Register xds so xds and xds-experimental resolver schemes work
+	_ "google.golang.org/grpc/xds"
+
 	"github.com/zeroflucs-given/grpcui/common"
 	"github.com/zeroflucs-given/grpcui/internal"
 	"github.com/zeroflucs-given/grpcui/standalone"

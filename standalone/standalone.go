@@ -26,6 +26,7 @@ import (
 	"github.com/zeroflucs-given/grpcui"
 	"github.com/zeroflucs-given/grpcui/common"
 	"github.com/zeroflucs-given/grpcui/internal/resources/standalone"
+	"github.com/zeroflucs-given/grpcurl"
 )
 
 const csrfCookieName = "_grpcui_csrf_token"
@@ -318,7 +319,7 @@ func HandlerViaReflection(ctx context.Context, cc grpc.ClientConnInterface, targ
 // HandlerViaFileDescriptorSet imports the file descriptor set (protoset), and constructs a handler to serve the UI.
 //
 // The handler has the same properties as the one returned by Handler.
-func HandlerViaFileDescriptorSet(cc grpc.ClientConnInterface, target string, fileDescriptorSet []byte, opts ...HandlerOption) (http.Handler, error) {
+func HandlerViaFileDescripHandlerViaFileDescriptorSettorSet(cc grpc.ClientConnInterface, target string, fileDescriptorSet []byte, opts ...HandlerOption) (http.Handler, error) {
 
 	var files descriptorpb.FileDescriptorSet
 	err := proto.Unmarshal(fileDescriptorSet, &files)
