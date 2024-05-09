@@ -19,7 +19,6 @@ import (
 	"net/http/httputil"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -42,6 +41,7 @@ import (
 	// Register xds so xds and xds-experimental resolver schemes work
 	_ "google.golang.org/grpc/xds"
 
+	"github.com/fullstorydev/grpcui/common"
 	"github.com/fullstorydev/grpcui/internal"
 	"github.com/fullstorydev/grpcui/standalone"
 )
@@ -392,13 +392,13 @@ func main() {
 	target := flags.Arg(0)
 
 	if len(protoset) > 0 && len(reflHeaders) > 0 {
-		warn("The -reflect-header argument is not used when -protoset files are used.")
+		common.Warn("The -reflect-header argument is not used when -protoset files are used.")
 	}
 	if len(protoset) > 0 && len(protoFiles) > 0 {
 		fail(nil, "Use either -protoset files or -proto files, but not both.")
 	}
 	if len(importPaths) > 0 && len(protoFiles) == 0 {
-		warn("The -import-path argument is not used unless -proto files are used.")
+		common.Warn("The -import-path argument is not used unless -proto files are used.")
 	}
 	if !reflection.val && len(protoset) == 0 && len(protoFiles) == 0 {
 		fail(nil, "No protoset files or proto files specified and -use-reflection set to false.")
@@ -520,7 +520,7 @@ func main() {
 		// can use either -servername or -authority; but not both
 		if *serverName != "" && *authority != "" {
 			if *serverName == *authority {
-				warn("Both -servername and -authority are present; prefer only -authority.")
+				common.Warn("Both -servername and -authority are present; prefer only -authority.")
 			} else {
 				fail(nil, "Cannot specify different values for -servername and -authority.")
 			}
@@ -594,7 +594,7 @@ func main() {
 		os.Exit(code)
 	}
 
-	methods, err := getMethods(descSource, configs)
+	methods, err := common.GetMethods(descSource, configs)
 	if err != nil {
 		fail(err, "Failed to compute set of methods to expose")
 	}
@@ -760,11 +760,6 @@ func prettify(docString string) string {
 	return strings.Join(parts[:j], "\n")
 }
 
-func warn(msg string, args ...interface{}) {
-	msg = fmt.Sprintf("Warning: %s\n", msg)
-	fmt.Fprintf(os.Stderr, msg, args...)
-}
-
 func fail(err error, msg string, args ...interface{}) {
 	if err != nil {
 		msg += ": %v"
@@ -919,11 +914,11 @@ func computeSvcConfigs() (map[string]*svcConfig, error) {
 	if len(services) == 0 && len(methods) == 0 {
 		return nil, nil
 	}
-	configs := map[string]*svcConfig{}
+	configs := map[string]*common.SvcConfig{}
 	for _, svc := range services {
-		configs[svc] = &svcConfig{
-			includeService: true,
-			includeMethods: map[string]struct{}{},
+		configs[svc] = &common.SvcConfig{
+			IncludeService: true,
+			IncludeMethods: map[string]struct{}{},
 		}
 	}
 	for _, fqMethod := range methods {
@@ -933,10 +928,10 @@ func computeSvcConfigs() (map[string]*svcConfig, error) {
 		}
 		cfg := configs[svc]
 		if cfg == nil {
-			cfg = &svcConfig{includeMethods: map[string]struct{}{}}
+			cfg = &common.SvcConfig{IncludeMethods: map[string]struct{}{}}
 			configs[svc] = cfg
 		}
-		cfg.includeMethods[method] = struct{}{}
+		cfg.IncludeMethods[method] = struct{}{}
 	}
 	return configs, nil
 }
