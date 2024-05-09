@@ -23,7 +23,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
-
 	"github.com/zeroflucs-given/grpcui"
 	"github.com/zeroflucs-given/grpcui/common"
 	"github.com/zeroflucs-given/grpcui/internal/resources/standalone"
