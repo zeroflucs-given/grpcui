@@ -663,7 +663,6 @@ func main() {
 	handlerOpts = append(handlerOpts, configureJSandCSS(extraJS, standalone.AddJSFile)...)
 	handlerOpts = append(handlerOpts, configureJSandCSS(extraCSS, standalone.AddCSSFile)...)
 	handlerOpts = append(handlerOpts, configureAssets(otherAssets)...)
-	handlerOpts = append(handlerOpts, standalone.WithGRPCOptions(gRPCOptions))
 
 	handler := standalone.Handler(cc, target, methods, allFiles, handlerOpts...)
 	if *maxTime > 0 {
@@ -729,12 +728,16 @@ func main() {
 		handler = mux
 	}
 
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", *bind, *port))
+	if err != nil {
+		fail(err, "Failed to listen on port %d", *port)
+	}
+
 	path := *basePath
 	if !strings.HasSuffix(path, "/") {
 		path += "/"
 	}
-
-	url := fmt.Sprintf("http://%s:%d%s", *bind, *port, path)
+	url := fmt.Sprintf("http://%s:%d%s", *bind, listener.Addr().(*net.TCPAddr).Port, path)
 	fmt.Printf("gRPC Web UI available at %s\n", url)
 
 	if *openBrowser {
@@ -744,14 +747,7 @@ func main() {
 			}
 		}()
 	}
-
-	server := http.Server{
-		Addr:              fmt.Sprintf("%s:%d", *bind, *port),
-		Handler:           handler,
-		ReadHeaderTimeout: time.Second * 3,
-	}
-
-	if err := server.ListenAndServe(); err != nil {
+	if err := http.Serve(listener, handler); err != nil {
 		fail(err, "Failed to serve web UI")
 	}
 }
@@ -1000,7 +996,7 @@ func (t *teeWriter) Write(b []byte) (int, error) {
 	// treat first writer as authoritative (regarding return value)
 	n, err := t.w[0].Write(b)
 	for _, w := range t.w[1:] {
-		w.Write(b) //nolint:errcheck
+		w.Write(b)
 	}
 	return n, err
 }
