@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/golang/protobuf/proto" //nolint:staticcheck
-	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
 )
 
