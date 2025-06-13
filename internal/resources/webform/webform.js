@@ -1472,15 +1472,28 @@ window.initGRPCForm = function(services, svcDescs, mtdDescs, invokeURI, metadata
         box.append(lbl);
         container.append(box);
 
+        var input = new Input(parent, [], value);
         fileInput.on('change', function() {
             var reader = new FileReader();
             reader.addEventListener("load", function () {
-                inp.text(btoa(this.result));
+                var base64Str = '';
+                if (typeof this.result == 'string') {
+                    base64Str = btoa(this.result)
+                } else if (this.result instanceof ArrayBuffer) {
+                    var bytes = new Uint8Array(this.result);
+                    var len = bytes.byteLength;
+                    var binary = '';
+                    for (var i = 0; i < len; i++) {
+                        binary += String.fromCharCode( bytes[ i ] );
+                    }
+                    base64Str = btoa(binary);
+                }
+                inp.text(base64Str);
+                input.setValue(base64Str);
             }, false);
             reader.readAsBinaryString(fileInput[0].files[0]);
-        })
+        });
 
-        var input = new Input(parent, [], value);
         inp.focus(function() {
             var inp = this;
             setValidation(inp, function() {
@@ -2737,18 +2750,19 @@ window.initGRPCForm = function(services, svcDescs, mtdDescs, invokeURI, metadata
             accordion.append(`<div class="history-item-panel">
                 <div class="history-detail-request">
                     <div class="history-detail-heading">Request</div>
-                    <span><pre class="request-json">${dataString.slice(0, 250)}${dataString.length > 250 ? '...' : ''}</pre></span>
+                    <span><pre class="request-json"></pre></span>
                 </div>
                 ${item.request.metadata.length === 0 ? '' : `
                 <div class="history-detail-metadata">
                     <div class="history-detail-heading">Metadata</div>
                     <table>
                         ${item.request.metadata.map((item) => `
-                        <tr><th>${item.name}</th><td>${item.value}</td></tr>
+                        <tr><th>${item.name.text}</th><td>${item.value.text}</td></tr>
                         `).join('\n')}
                     </table>
                 </div>`}
             </div>`);
+            document.querySelector(".request-json").textContent = dataString.slice(0, 250) + (dataString.length > 250 ? "..." : "");
             $(`#delete-${id}`).click((evt) => {
                 deleteHistoryItem(i);
                 evt.preventDefault();

@@ -16,6 +16,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"math"
 	"mime"
 	"net"
 	"net/http"
@@ -474,13 +475,13 @@ func main() {
 	ctx := context.Background()
 	dialTime := 10 * time.Second
 	if *connectTimeout > 0 {
-		dialTime = time.Duration(*connectTimeout * float64(time.Second))
+		dialTime = floatSecondsToDuration(*connectTimeout)
 	}
 	dialCtx, cancel := context.WithTimeout(ctx, dialTime)
 	defer cancel()
 	var opts []grpc.DialOption
 	if *keepaliveTime > 0 {
-		timeout := time.Duration(*keepaliveTime * float64(time.Second))
+		timeout := floatSecondsToDuration(*keepaliveTime)
 		opts = append(opts, grpc.WithKeepaliveParams(keepalive.ClientParameters{
 			Time:    timeout,
 			Timeout: timeout,
@@ -636,7 +637,7 @@ func main() {
 
 	handler := standalone.Handler(cc, target, methods, allFiles, handlerOpts...)
 	if *maxTime > 0 {
-		timeout := time.Duration(*maxTime * float64(time.Second))
+		timeout := floatSecondsToDuration(*maxTime)
 		// enforce the timeout by wrapping the handler and inserting a
 		// context timeout for invocation calls
 		orig := handler
@@ -845,7 +846,76 @@ func configureAssets(names []string) []standalone.HandlerOption {
 	return opts
 }
 
-func computeSvcConfigs() (map[string]*common.SvcConfig, error) {
+type svcConfig struct {
+	includeService bool
+	includeMethods map[string]struct{}
+}
+
+func getMethods(source grpcurl.DescriptorSource, configs map[string]*svcConfig) ([]*desc.MethodDescriptor, error) {
+	servicesConfigured := len(configs) > 0
+	allServices, err := source.ListServices()
+	if err != nil {
+		return nil, err
+	}
+
+	var descs []*desc.MethodDescriptor
+	for _, svc := range allServices {
+		if svc == "grpc.reflection.v1alpha.ServerReflection" || svc == "grpc.reflection.v1.ServerReflection" {
+			continue
+		}
+		d, err := source.FindSymbol(svc)
+		if err != nil {
+			return nil, err
+		}
+		sd, ok := d.(*desc.ServiceDescriptor)
+		if !ok {
+			return nil, fmt.Errorf("%s should be a service descriptor but instead is a %T", d.GetFullyQualifiedName(), d)
+		}
+		cfg := configs[svc]
+		if cfg == nil && servicesConfigured {
+			// not configured to expose this service
+			continue
+		}
+		delete(configs, svc)
+		for _, md := range sd.GetMethods() {
+			if cfg == nil {
+				descs = append(descs, md)
+				continue
+			}
+			_, found := cfg.includeMethods[md.GetName()]
+			delete(cfg.includeMethods, md.GetName())
+			if found && cfg.includeService {
+				warn("Service %s already configured, so -method %s is unnecessary", svc, md.GetName())
+			}
+			if found || cfg.includeService {
+				descs = append(descs, md)
+			}
+		}
+		if cfg != nil && len(cfg.includeMethods) > 0 {
+			// configured methods not found
+			methodNames := make([]string, 0, len(cfg.includeMethods))
+			for m := range cfg.includeMethods {
+				methodNames = append(methodNames, fmt.Sprintf("%s/%s", svc, m))
+			}
+			sort.Strings(methodNames)
+			return nil, fmt.Errorf("configured methods not found: %s", strings.Join(methodNames, ", "))
+		}
+	}
+
+	if len(configs) > 0 {
+		// configured services not found
+		svcNames := make([]string, 0, len(configs))
+		for s := range configs {
+			svcNames = append(svcNames, s)
+		}
+		sort.Strings(svcNames)
+		return nil, fmt.Errorf("configured services not found: %s", strings.Join(svcNames, ", "))
+	}
+
+	return descs, nil
+}
+
+func computeSvcConfigs() (map[string]*svcConfig, error) {
 	if len(services) == 0 && len(methods) == 0 {
 		return nil, nil
 	}
@@ -1107,4 +1177,13 @@ func dumpResponse(r *http.Response, includeBody bool) (string, error) {
 		}
 	}
 	return buf.String(), nil
+}
+
+func floatSecondsToDuration(seconds float64) time.Duration {
+	durationFloat := seconds * float64(time.Second)
+	if durationFloat > math.MaxInt64 {
+		// Avoid overflow
+		return math.MaxInt64
+	}
+	return time.Duration(durationFloat)
 }
