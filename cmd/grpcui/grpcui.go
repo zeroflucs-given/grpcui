@@ -7,6 +7,8 @@ package main
 import (
 	// Register gzip compressor so compressed responses will work
 	_ "google.golang.org/grpc/encoding/gzip"
+	"sort"
+
 	// Register xds so xds and xds-experimental resolver schemes work
 	_ "google.golang.org/grpc/xds"
 
@@ -885,7 +887,7 @@ func getMethods(source grpcurl.DescriptorSource, configs map[string]*svcConfig) 
 			_, found := cfg.includeMethods[md.GetName()]
 			delete(cfg.includeMethods, md.GetName())
 			if found && cfg.includeService {
-				warn("Service %s already configured, so -method %s is unnecessary", svc, md.GetName())
+				common.Warn("Service %s already configured, so -method %s is unnecessary", svc, md.GetName())
 			}
 			if found || cfg.includeService {
 				descs = append(descs, md)
@@ -915,7 +917,7 @@ func getMethods(source grpcurl.DescriptorSource, configs map[string]*svcConfig) 
 	return descs, nil
 }
 
-func computeSvcConfigs() (map[string]*svcConfig, error) {
+func computeSvcConfigs() (map[string]*common.SvcConfig, error) {
 	if len(services) == 0 && len(methods) == 0 {
 		return nil, nil
 	}
