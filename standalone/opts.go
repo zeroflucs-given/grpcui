@@ -1,6 +1,7 @@
 package standalone
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -219,6 +220,12 @@ func WithClientDebug(debug bool) HandlerOption {
 	})
 }
 
+func WithContextHook(hook func(ctx context.Context) context.Context) HandlerOption {
+	return optFunc(func(opts *handlerOptions) {
+		opts.contextHooks = append(opts.contextHooks, hook)
+	})
+}
+
 // optFunc implements HandlerOption
 type optFunc func(opts *handlerOptions)
 
@@ -239,6 +246,7 @@ type handlerOptions struct {
 	emitDefaults        bool
 	invokeVerbosity     int
 	debug               *bool
+	contextHooks        []func(ctx context.Context) context.Context
 }
 
 func (opts *handlerOptions) addlServedResources() []*resource {

@@ -66,6 +66,8 @@ type InvokeOptions struct {
 	// of a bool "verbose" flag, so that additional logs may be added in the
 	// future and the caller control how detailed those logs will be.
 	Verbosity int
+
+	ContextHooks []func(ctx context.Context) context.Context
 }
 
 // RPCInvokeHandlerWithOptions is the same as RPCInvokeHandler except that it
@@ -96,7 +98,13 @@ func RPCInvokeHandlerWithOptions(ch grpc.ClientConnInterface, descs []*desc.Meth
 					http.Error(w, "Failed to create descriptor source: "+err.Error(), http.StatusInternalServerError)
 					return
 				}
-				results, err := invokeRPC(r.Context(), method, ch, descSource, r.Header, r.Body, &options)
+
+				ctx := r.Context()
+				for _, ctxHook := range options.ContextHooks {
+					ctx = ctxHook(ctx)
+				}
+
+				results, err := invokeRPC(ctx, method, ch, descSource, r.Header, r.Body, &options)
 				if err != nil {
 					if _, ok := err.(errReadFail); ok {
 						http.Error(w, "Failed to read request", 499)
