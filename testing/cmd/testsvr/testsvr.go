@@ -28,8 +28,6 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
-//go:generate protoc --go_out=. --go-grpc_out=. --gosrcinfo_out=. test.proto
-
 func main() {
 	port := flag.Int("port", 0, "Port on which to listen")
 	flag.Parse()
@@ -423,3 +421,5 @@ func (s testSvr) SendMultipleUInt64(stream KitchenSink_SendMultipleUInt64Server)
 		}
 	}
 }
+
+//go:generate protoc --go_out=. --go-grpc_out=. --gosrcinfo_out=. test.proto
