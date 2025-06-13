@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"github.com/fullstorydev/grpcurl"
-	"github.com/golang/protobuf/jsonpb" //nolint:staticcheck
-	"github.com/golang/protobuf/proto"  //nolint:staticcheck
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
 	"github.com/jhump/protoreflect/desc"
 	"google.golang.org/grpc"
@@ -58,7 +58,7 @@ type InvokeOptions struct {
 	// includes conflicting metadata, the values in the HTTP request headers
 	// will override, and the values in the request will not be sent.
 	PreserveHeaders []string
-	// Whether or not default values should be emitted in the JSON response
+	// Whether default values should be emitted in the JSON response
 	EmitDefaults bool
 	// If verbosity is greater than zero, the handler may log events, such as
 	// cases where the request included metadata that conflicts with the
