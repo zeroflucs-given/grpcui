@@ -3,9 +3,8 @@ package standalone
 import (
 	"encoding/json"
 
-	"google.golang.org/protobuf/encoding/protojson"
-
 	"github.com/golang/protobuf/proto" //nolint:staticcheck
+	"google.golang.org/protobuf/encoding/protojson"
 	protov2 "google.golang.org/protobuf/proto"
 )
 
