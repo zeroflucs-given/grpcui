@@ -1,14 +1,13 @@
 package grpcui
 
 import (
+	"github.com/fullstorydev/grpcurl"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/grpcreflect"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
-
-	"github.com/fullstorydev/grpcurl"
 )
 
 // AllFilesViaReflection returns a slice that contains the file descriptors

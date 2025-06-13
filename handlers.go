@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fullstorydev/grpcurl"
 	"github.com/golang/protobuf/jsonpb" //nolint:staticcheck
 	"github.com/golang/protobuf/proto"  //nolint:staticcheck
 	"github.com/golang/protobuf/protoc-gen-go/descriptor"
@@ -23,7 +24,6 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/fullstorydev/grpcurl"
 	"github.com/zeroflucs-given/grpcui/internal"
 )
 
