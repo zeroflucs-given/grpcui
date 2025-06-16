@@ -1,8 +1,26 @@
-dist/
-VERSION
+# Block everything by default
+*
+
+# Always include
+!/vendor/**
+!/**/
+!*.*
+
+# IDE & tooling
 .idea/
 *.iml
-.tmp/
+.vscode
 .cscode
 .github
 .circleci
+.goreleaser.yml
+
+# Build bits
+dist/
+VERSION
+
+# Other
+.DS_Store
+thumbs.db
+.tmp/
+_*

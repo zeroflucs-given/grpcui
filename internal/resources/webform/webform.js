@@ -2201,7 +2201,7 @@ window.initGRPCForm = function(services, svcDescs, mtdDescs, invokeURI, metadata
     // finished uploading. It can even happen on a "successful" call, where the
     // server terminates the RPC but with no error, which still preempts sending
     // of any more request messages.)
-    function invoke() {
+    function invoke(download_result = false) {
         var service = $("#grpc-service").val();
         var method = $("#grpc-method").val();
 
@@ -2249,16 +2249,20 @@ window.initGRPCForm = function(services, svcDescs, mtdDescs, invokeURI, metadata
 
         const startTime = window.performance.now();
 
-        $.ajax(
-            {
+        $.ajax({
                 type: "POST",
                 url: invokeURI + "/" + service + "." + method,
                 contentType: "application/json",
                 data: JSON.stringify({timeout_seconds: timeout, metadata: metadata, data: data}),
             })
             .done(function(responseData) {
-                var durationMs = window.performance.now() - startTime;
-                renderResponse(historyItem, durationMs, responseData);
+                if (!download_result || responseData?.errors) {
+                    var durationMs = window.performance.now() - startTime;
+                    renderResponse(historyItem, durationMs, responseData);
+                } else {
+                    // console.log("have response data", responseData);
+                    download(`grpcui_${Date.now()}_${method}.json`, JSON.stringify(responseData));
+                }
             })
             .fail(function(failureData, status) {
                 addHistory({
@@ -2865,9 +2869,10 @@ window.initGRPCForm = function(services, svcDescs, mtdDescs, invokeURI, metadata
     $("#grpc-request-metadata-add-row").click(function() {
         addMetadataRow();
     });
+
     $(".grpc-invoke").click(function(e) {
         if (onlyIfValid(e)) {
-            invoke();
+            invoke(!!e.target.dataset.download);
         }
     });
 
