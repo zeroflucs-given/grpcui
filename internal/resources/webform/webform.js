@@ -2188,6 +2188,23 @@ window.initGRPCForm = function(services, svcDescs, mtdDescs, invokeURI, metadata
         tr.append(nameTd, valueTd);
     }
 
+    function snakeToCamel(str) {
+        return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+      }
+      
+      function snakeToCamelCaseJson(obj) {
+        if (Array.isArray(obj)) {
+          return obj.map(snakeToCamelCaseJson);
+        } else if (obj !== null && typeof obj === 'object') {
+          return Object.entries(obj).reduce((acc, [key, val]) => {
+            const camelKey = snakeToCamel(key);
+            acc[camelKey] = snakeToCamelCaseJson(val);
+            return acc;
+          }, {});
+        }
+        return obj;
+      }
+
     // Invokes an RPC by sending the user-defined request data and metadata to
     // the server and then rendering the result to the "Response" tab.
     //
@@ -2249,6 +2266,8 @@ window.initGRPCForm = function(services, svcDescs, mtdDescs, invokeURI, metadata
 
         const startTime = window.performance.now();
 
+        var format = $("#grpc-response-format input").is(":checked");
+
         $.ajax({
                 type: "POST",
                 url: invokeURI + "/" + service + "." + method,
@@ -2257,11 +2276,22 @@ window.initGRPCForm = function(services, svcDescs, mtdDescs, invokeURI, metadata
             })
             .done(function(responseData) {
                 if (!download_result || responseData?.errors) {
-                    var durationMs = window.performance.now() - startTime;
-                    renderResponse(historyItem, durationMs, responseData);
+                    if (!format) {
+                        var durationMs = window.performance.now() - startTime;
+                        renderResponse(historyItem, durationMs, responseData);
+                    } else {
+                        var durationMs = window.performance.now() - startTime;
+                        const responseDataFormatted = snakeToCamelCaseJson(responseData);
+                        renderResponse(historyItem, durationMs, responseDataFormatted);
+                    }
                 } else {
-                    // console.log("have response data", responseData);
-                    download(`grpcui_${Date.now()}_${method}.json`, JSON.stringify(responseData));
+                    if (!format) {
+                        download(`grpcui_${Date.now()}_${method}.json`, JSON.stringify(responseData));
+                    }
+                    else {
+                        const responseDataFormatted = snakeToCamelCaseJson(responseData);
+                        download(`grpcui_${Date.now()}_${method}.json`, JSON.stringify(responseDataFormatted));
+                    }
                 }
             })
             .fail(function(failureData, status) {
