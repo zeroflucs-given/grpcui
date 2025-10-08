@@ -226,6 +226,12 @@ func WithContextHook(hook func(ctx context.Context) context.Context) HandlerOpti
 	})
 }
 
+func WithGRPCOptions(options []string) HandlerOption {
+	return optFunc(func(opts *handlerOptions) {
+		opts.gRPCurlOptions = options
+	})
+}
+
 // optFunc implements HandlerOption
 type optFunc func(opts *handlerOptions)
 
@@ -247,6 +253,7 @@ type handlerOptions struct {
 	invokeVerbosity     int
 	debug               *bool
 	contextHooks        []func(ctx context.Context) context.Context
+	gRPCurlOptions      []string
 }
 
 func (opts *handlerOptions) addlServedResources() []*resource {

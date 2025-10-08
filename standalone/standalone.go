@@ -30,6 +30,7 @@ import (
 )
 
 const csrfCookieName = "_grpcui_csrf_token"
+
 const csrfHeaderName = "x-grpcui-csrf-token"
 
 // Handler returns an HTTP handler that provides a fully-functional gRPC web
@@ -48,9 +49,10 @@ const csrfHeaderName = "x-grpcui-csrf-token"
 // be handling a sub-path (e.g. handling "/rpc-ui/") then use http.StripPrefix.
 func Handler(ch grpcdynamic.Channel, target string, methods []*desc.MethodDescriptor, files []*desc.FileDescriptor, opts ...HandlerOption) http.Handler {
 	uiOpts := &handlerOptions{
-		indexTmpl: defaultIndexTemplate,
-		css:       grpcui.WebFormSampleCSS(),
-		cssPublic: true,
+		indexTmpl:      defaultIndexTemplate,
+		css:            grpcui.WebFormSampleCSS(),
+		cssPublic:      true,
+		gRPCurlOptions: nil,
 	}
 	for _, o := range opts {
 		o.apply(uiOpts)
@@ -81,6 +83,7 @@ func Handler(ch grpcdynamic.Channel, target string, methods []*desc.MethodDescri
 	formOpts := grpcui.WebFormOptions{
 		DefaultMetadata: uiOpts.defaultMetadata,
 		Debug:           uiOpts.debug,
+		GRPCurlOptions:  uiOpts.gRPCurlOptions,
 	}
 	webFormHTML := grpcui.WebFormContentsWithOptions("invoke", "metadata", target, methods, formOpts)
 	indexContents := getIndexContents(uiOpts.indexTmpl, target, webFormHTML, uiOpts.tmplResources)
@@ -160,6 +163,7 @@ func getIndexContents(tmpl *template.Template, target string, webFormHTML []byte
 		WebFormContents: template.HTML(webFormHTML),
 		AddlResources:   addlHTML,
 	}
+
 	var indexBuf bytes.Buffer
 	if err := tmpl.Execute(&indexBuf, data); err != nil {
 		panic(err)

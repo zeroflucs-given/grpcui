@@ -2,6 +2,7 @@ package grpcui
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"os"
@@ -70,6 +71,8 @@ type WebFormOptions struct {
 	// an environment variable: GRPC_WEBFORM_DEBUG (if it's not blank, then
 	// debug is enabled).
 	Debug *bool
+	// Any options that will be rendered before grpcurl in the grpccurl/raw request box
+	GRPCurlOptions []string
 }
 
 // WebFormContentsWithOptions is the same as WebFormContents except that it
@@ -90,6 +93,7 @@ func WebFormContentsWithOptions(invokeURI, metadataURI string, target string, de
 		DefaultMetadata []metadataEntry
 		Debug           bool
 		Target          string
+		GRPCurlOptions  template.JS
 	}{
 		InvokeURI:   invokeURI,
 		MetadataURI: metadataURI,
@@ -100,6 +104,11 @@ func WebFormContentsWithOptions(invokeURI, metadataURI string, target string, de
 		Target:      target,
 	}
 
+	gRPCOptionsJSONStr, err := json.Marshal(strings.Join(opts.GRPCurlOptions, " "))
+	if err != nil {
+		panic(fmt.Errorf("Error marshaling to JSON: %w", err))
+	}
+	params.GRPCurlOptions = template.JS(gRPCOptionsJSONStr)
 	if opts.Debug != nil {
 		params.Debug = *opts.Debug
 	}
