@@ -7,8 +7,6 @@ package main
 import (
 	// Register gzip compressor so compressed responses will work
 	_ "google.golang.org/grpc/encoding/gzip"
-	"sort"
-
 	// Register xds so xds and xds-experimental resolver schemes work
 	_ "google.golang.org/grpc/xds"
 
@@ -26,6 +24,7 @@ import (
 	"net/http/httputil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
