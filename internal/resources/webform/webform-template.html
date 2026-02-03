@@ -69,7 +69,7 @@
 
         <button class="grpc-invoke" disabled>Invoke</button>
         <button class="grpc-invoke" data-download="true" disabled>Invoke & Download</button>
-        <div id="grpc-response-format" style="margin-top: 4;">
+        <div id="grpc-response-format" style="margin-top: 4px;">
           <input type="checkbox" id="format" name="format" value="format"/>
           <label for="format"> Format Response?</label><br>
         </div>
@@ -77,10 +77,20 @@
       <div class="grpc-tabcontent" id="grpc-request-raw-tab">
         <div class="grpc-request-raw-container">
           <h3>Request payload</h3>
+          <div class="zf-options-container">
+            <div class="zf-options-item">
+              <input type="checkbox" id="validate-json" name="validate-json" value="validate-json" checked />
+              <label for="validate-json"> Validate JSON request payload</label>
+            </div>
+            <div class="zf-options-item">
+              <input type="checkbox" id="add-to-history" name="add-to-history" value="add-to-history" checked />
+              <label for="add-to-history"> Add request/response to history</label>
+            </div>
+          </div>
           <textarea id="grpc-request-raw-text"></textarea><br/>
           <button class="grpc-invoke" disabled>Invoke</button>
           <button class="grpc-invoke" data-download="true" disabled>Invoke & Download</button>
-          <div id="grpc-response-format" style="margin-top: 4;">
+          <div id="grpc-response-format" style="margin-top: 4px;">
             <input type="checkbox" id="format" name="format" value="format"/>
             <label for="format"> Format Response?</label><br>
           </div>

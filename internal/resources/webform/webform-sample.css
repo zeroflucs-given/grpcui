@@ -1126,3 +1126,14 @@ button#grpc-history-clear, button#grpc-history-save {
         border-color: #606166 !important;
     }
 }
+
+.zf-options-container {
+    display: flex;
+    flex-direction: row;
+    margin-top: 4px;
+    margin-bottom: 2px;
+}
+
+.zf-options-item {
+    margin-right: 1em;
+}

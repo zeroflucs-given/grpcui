@@ -2143,9 +2143,11 @@ window.initGRPCForm = function(services, svcDescs, mtdDescs, invokeURI, metadata
     }
 
     function validateJSON() {
-        const requestDataJson = jsonRawTextArea.val();
-        const reqObj = JSON.parse(requestDataJson);
-        rebuildRequestForm(reqObj, false);
+        if ($("#validate-json")[0].checked) {
+            const requestDataJson = jsonRawTextArea.val();
+            const reqObj = JSON.parse(requestDataJson);
+            rebuildRequestForm(reqObj, false);
+        }
     }
 
     function updateCurlDisplay() {
@@ -2250,20 +2252,26 @@ window.initGRPCForm = function(services, svcDescs, mtdDescs, invokeURI, metadata
         // ignore subsequent clicks until this RPC finishes
         $(".grpc-invoke").prop("disabled", true);
 
-        if (originalData instanceof Array) {
-            cloneData = $.extend(true, [], originalData)
-        } else {
-            cloneData = $.extend(true, {}, originalData)
-        }
-        const historyItem = {
-            request: {
-                timeout_seconds: timeout,
-                metadata: $.extend([], metadata),
-                data: cloneData
-            },
-            service: service,
-            method: method,
-            startTime: new Date().toISOString(),
+        let historyItem;
+        const shouldAddToHistory = $("#add-to-history").is(":checked");
+
+        if (shouldAddToHistory) {
+            if (originalData instanceof Array) {
+                cloneData = $.extend(true, [], originalData)
+            } else {
+                cloneData = $.extend(true, {}, originalData)
+            }
+
+            historyItem = {
+                request: {
+                    timeout_seconds: timeout,
+                    metadata: $.extend([], metadata),
+                    data: cloneData
+                },
+                service: service,
+                method: method,
+                startTime: new Date().toISOString(),
+            }
         }
 
         const startTime = window.performance.now();
@@ -2297,11 +2305,13 @@ window.initGRPCForm = function(services, svcDescs, mtdDescs, invokeURI, metadata
                 }
             })
             .fail(function(failureData, status) {
-                addHistory({
-                    ...historyItem,
-                    durationMS: window.performance.now() - startTime,
-                    failureStatus: status,
-                });
+                if (shouldAddToHistory) {
+                    addHistory({
+                        ...historyItem,
+                        durationMS: window.performance.now() - startTime,
+                        failureStatus: status,
+                    });
+                }
                 alert("Unexpected error: " + status);
                 if (debug) {
                     console.trace(failureData.responseText);
@@ -2365,11 +2375,13 @@ window.initGRPCForm = function(services, svcDescs, mtdDescs, invokeURI, metadata
             $("#grpc-response-error").hide();
         }
 
-        addHistory({
-            ...historyItem,
-            durationMS: durationMs,
-            responseData: historyResponseData(responseData),
-        });
+        if (historyItem) {
+            addHistory({
+                ...historyItem,
+                durationMS: durationMs,
+                responseData: historyResponseData(responseData),
+            });
+        }
 
         // TODO(jh): "copy as grpcurl" button? This would provide a
         // command-line for grpcurl that does the same thing as clicking
