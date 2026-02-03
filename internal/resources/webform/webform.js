@@ -2136,18 +2136,20 @@ window.initGRPCForm = function(services, svcDescs, mtdDescs, invokeURI, metadata
         gRPCurlTextArea.text(`grpcurl${grpcOpts}${metadataStr} -d '${requestDataJson}' ${window.target} ${service}.${method}`);
     }
 
-    var jsonRawTextArea = $("#grpc-request-raw-text");
+    let jsonRawTextArea = $("#grpc-request-raw-text");
     function updateJSONRequest(req) {
-        let requestDataJson = JSON.stringify(req, null, 2);
+        const requestDataJson = JSON.stringify(req, null, 2);
         jsonRawTextArea.val(requestDataJson);
-        updateCurlCommand(requestDataJson);
     }
 
     function validateJSON() {
-        let requestDataJson = jsonRawTextArea.val();
-        updateCurlCommand(requestDataJson);
-        var reqObj = JSON.parse(requestDataJson);
+        const requestDataJson = jsonRawTextArea.val();
+        const reqObj = JSON.parse(requestDataJson);
         rebuildRequestForm(reqObj, false);
+    }
+
+    function updateCurlDisplay() {
+        updateCurlCommand(jsonRawTextArea.val());
     }
 
     jsonRawTextArea.focus(function() {
@@ -2191,7 +2193,7 @@ window.initGRPCForm = function(services, svcDescs, mtdDescs, invokeURI, metadata
     function snakeToCamel(str) {
         return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
       }
-      
+
       function snakeToCamelCaseJson(obj) {
         if (Array.isArray(obj)) {
           return obj.map(snakeToCamelCaseJson);
@@ -2905,6 +2907,10 @@ window.initGRPCForm = function(services, svcDescs, mtdDescs, invokeURI, metadata
             invoke(!!e.target.dataset.download);
         }
     });
+
+    $("#generate-curl").click(function(e) {
+        updateCurlDisplay();
+    })
 
     if (localStorage.getItem(expandDescStorageKey) === "true") {
         descriptionsShown = true;
